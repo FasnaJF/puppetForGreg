@@ -16,14 +16,15 @@
 #
 
 # GREG cartridge node
-node /[0-9]{1,12}.(default|manager|worker).greg/ inherits base {
+#Manager
+node /[0-9]{1,12}.manager.greg/ inherits base {
   $docroot = "/mnt/${server_ip}/wso2greg-4.6.0"
   require java
-  class {'agent':}
+  class {'python_agent':}
   class {'greg':
 
         version            => '4.6.0',
-        sub_cluster_domain => 'test',
+        sub_cluster_domain => 'mgt',
         members            => undef,
         offset             => 0,
         hazelcast_port     => 4000,
@@ -31,13 +32,42 @@ node /[0-9]{1,12}.(default|manager|worker).greg/ inherits base {
 	config_target_path => 'GREG_CONFIG_PATH',
         maintenance_mode   => 'zero',
         depsync            => false,
-        clustering         => CLUSTERING,
+        clustering         => 'true',
         cloud              => true,
         owner              => 'root',
         group              => 'root',
-        target             => "/mnt/${server_ip}"
+        target             => "/mnt/${server_ip}",
+	stratos_instance_data_deployment => 'manager'
 
   }
 
-  Class['stratos_base'] -> Class['java'] -> Class['greg'] ~> Class['agent']
+  Class['stratos_base'] -> Class['java'] -> Class['greg'] ~> Class['python_agent']
+}
+
+#Worker
+node /[0-9]{1,12}.(default|manager|worker).greg/ inherits base {
+  $docroot = "/mnt/${server_ip}/wso2greg-4.6.0"
+  require java
+  class {'python_agent':}
+  class {'greg':
+
+        version            => '4.6.0',
+        sub_cluster_domain => 'worker',
+        members            => undef,
+        offset             => 0,
+        hazelcast_port     => 4000,
+        config_db          => 'GREG_CONFIG_DB',
+	config_target_path => 'GREG_CONFIG_PATH',
+        maintenance_mode   => 'zero',
+        depsync            => false,
+        clustering         => 'true',
+        cloud              => true,
+        owner              => 'root',
+        group              => 'root',
+        target             => "/mnt/${server_ip}",
+	stratos_instance_data_deployment => 'worker'
+
+  }
+
+  Class['stratos_base'] -> Class['java'] -> Class['greg'] ~> Class['python_agent']
 }
